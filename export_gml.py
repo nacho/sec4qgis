@@ -22,16 +22,20 @@
  *                                                                         *
  ***************************************************************************/
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from builtins import str
+from builtins import range
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 import datetime
 import codecs
 import re
-from export_gml_dialog import ExportGmlDialog
+from .export_gml_dialog import ExportGmlDialog
 ###########################################################################################################################
 ###########################################################################################################################
 def run_script(self):
@@ -79,7 +83,7 @@ def run_script(self):
     exported_parcel_number = 1
     sequential_parcel_number = 1
     crs_1 = layer_1.crs().authid()
-    if crs_1.upper() not in self.valid_sec_crs_list.keys():
+    if crs_1.upper() not in list(self.valid_sec_crs_list.keys()):
         valid_sec_crs_string = ""
         for valid_sec_crs in sorted(self.valid_sec_crs_list.keys()):
             valid_sec_crs_string = valid_sec_crs_string+valid_sec_crs+", "
@@ -150,7 +154,7 @@ def run_script(self):
         if (localId_1 == ""):
             pass
         else:
-            if inspireId_localId.has_key(localId_1):
+            if localId_1 in inspireId_localId:
                 inspireId_localId[localId_1] += 1
                 duplicated_localId = True
             else:
@@ -180,12 +184,15 @@ def run_script(self):
         features_iterator_1 = layer_1.selectedFeatures()
     else:
         features_iterator_1 = layer_1.getFeatures()
-    print >>output_file, '''<?xml version="1.0" encoding="utf-8"?>
-<!-- GML generado usando '''+self.plugin_name_and_version()+''' -->'''
+    # fix_print_with_import
+    print('''<?xml version="1.0" encoding="utf-8"?>
+<!-- GML generado usando '''+self.plugin_name_and_version()+''' -->''', file=output_file)
     if export_gml_version_index == 0:
-        print >>output_file, '''<gml:FeatureCollection gml:id="ES.SDGC.CP" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:cp="urn:x-inspire:specification:gmlas:CadastralParcels:3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:x-inspire:specification:gmlas:CadastralParcels:3.0 http://inspire.ec.europa.eu/schemas/cp/3.0/CadastralParcels.xsd">'''
+        # fix_print_with_import
+        print('''<gml:FeatureCollection gml:id="ES.SDGC.CP" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:cp="urn:x-inspire:specification:gmlas:CadastralParcels:3.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:x-inspire:specification:gmlas:CadastralParcels:3.0 http://inspire.ec.europa.eu/schemas/cp/3.0/CadastralParcels.xsd">''', file=output_file)
     elif export_gml_version_index == 1:
-        print >>output_file, '''<gml:FeatureCollection gml:id="ES.SDGC.CP" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:cp="http://inspire.ec.europa.eu/schemas/cp/4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://inspire.ec.europa.eu/schemas/cp/4.0 http://inspire.ec.europa.eu/schemas/cp/4.0/CadastralParcels.xsd">'''
+        # fix_print_with_import
+        print('''<gml:FeatureCollection gml:id="ES.SDGC.CP" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:ogc="http://www.opengis.net/ogc" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:cp="http://inspire.ec.europa.eu/schemas/cp/4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://inspire.ec.europa.eu/schemas/cp/4.0 http://inspire.ec.europa.eu/schemas/cp/4.0/CadastralParcels.xsd">''', file=output_file)
     for feature_1 in features_iterator_1:
         timestamp_1 = datetime.datetime.now().isoformat()
         geometry_1=feature_1.geometry()
@@ -196,7 +203,7 @@ def run_script(self):
             while True:
                 localId_1 = "PARCELA_%04d"%(sequential_parcel_number,)
                 sequential_parcel_number += 1
-                if not inspireId_localId.has_key(localId_1):
+                if localId_1 not in inspireId_localId:
                     break
         localId_1 = self.fix_characters(localId_1)
         if (feature_1.fieldNameIndex(self.field_nameSpace) != -1) and (feature_1[self.field_nameSpace] != NULL) and (feature_1[self.field_nameSpace] != ''):
@@ -206,41 +213,41 @@ def run_script(self):
                     break
         else:
             nameSpace_1 = "ES.LOCAL.CP"
-        print >>output_file, '    <!-- Parcela Catastral '+localId_1+' -->'
-        print >>output_file, '''    <gml:featureMember>
-        <cp:CadastralParcel gml:id="'''+nameSpace_1+'.'+localId_1+'">'
-        print >>output_file, '            <cp:areaValue uom="m2">'+str(int(round(feature_1.geometry().area(),0)))+'</cp:areaValue>'
-        print >>output_file, '''            <cp:beginLifespanVersion>'''+timestamp_1+'''</cp:beginLifespanVersion>
+        print('    <!-- Parcela Catastral '+localId_1+' -->', file=output_file)
+        print('''    <gml:featureMember>
+        <cp:CadastralParcel gml:id="'''+nameSpace_1+'.'+localId_1+'">', file=output_file)
+        print('            <cp:areaValue uom="m2">'+str(int(round(feature_1.geometry().area(),0)))+'</cp:areaValue>', file=output_file)
+        print('''            <cp:beginLifespanVersion>'''+timestamp_1+'''</cp:beginLifespanVersion>
             <cp:endLifespanVersion xsi:nil="true" nilReason="other:unpopulated"/>
             <cp:geometry>
-                <gml:MultiSurface gml:id="MultiSurface_'''+nameSpace_1+'.'+localId_1+'" srsName="urn:ogc:def:crs:'+crs_1+'">'
+                <gml:MultiSurface gml:id="MultiSurface_'''+nameSpace_1+'.'+localId_1+'" srsName="urn:ogc:def:crs:'+crs_1+'">', file=output_file)
         if geometry_1.wkbType() == 3:
             exported_parcel_number += 1
             describe_polygon(feature_1, localId_1, nameSpace_1, crs_1, output_file)
         elif geometry_1.wkbType() == 6:
             exported_parcel_number += 1
             describe_multipolygon(feature_1, localId_1, nameSpace_1, crs_1, output_file)
-        print >>output_file, '''                </gml:MultiSurface>
-            </cp:geometry>'''
+        print('''                </gml:MultiSurface>
+            </cp:geometry>''', file=output_file)
         if export_gml_version_index == 0:
-            print >>output_file, '            <cp:inspireId xmlns:base="urn:x-inspire:specification:gmlas:BaseTypes:3.2">'
+            print('            <cp:inspireId xmlns:base="urn:x-inspire:specification:gmlas:BaseTypes:3.2">', file=output_file)
         elif export_gml_version_index == 1:
-            print >>output_file, '            <cp:inspireId xmlns:base="http://inspire.ec.europa.eu/schemas/base/3.3">'
-        print >>output_file, '''                <base:Identifier>
+            print('            <cp:inspireId xmlns:base="http://inspire.ec.europa.eu/schemas/base/3.3">', file=output_file)
+        print('''                <base:Identifier>
                     <base:localId>'''+localId_1+'''</base:localId>
                     <base:namespace>'''+nameSpace_1+'''</base:namespace>
                 </base:Identifier>
             </cp:inspireId>
-            <cp:label>'''+"P%04d"%(exported_parcel_number-1,)+'''</cp:label>'''
+            <cp:label>'''+"P%04d"%(exported_parcel_number-1,)+'''</cp:label>''', file=output_file)
         if nameSpace_1 == "ES.LOCAL.CP":
-            print >>output_file, '            <cp:nationalCadastralReference/>'
+            print('            <cp:nationalCadastralReference/>', file=output_file)
         else:
-            print >>output_file, '            <cp:nationalCadastralReference>'+localId_1+'</cp:nationalCadastralReference>'
-        print >>output_file, '''            <cp:validFrom xsi:nil="true" nilReason="other:unpopulated"/>
+            print('            <cp:nationalCadastralReference>'+localId_1+'</cp:nationalCadastralReference>', file=output_file)
+        print('''            <cp:validFrom xsi:nil="true" nilReason="other:unpopulated"/>
             <cp:validTo xsi:nil="true" nilReason="other:unpopulated"/>
         </cp:CadastralParcel>
-    </gml:featureMember>'''
-    print >>output_file, '</gml:FeatureCollection>'
+    </gml:featureMember>''', file=output_file)
+    print('</gml:FeatureCollection>', file=output_file)
     output_file.close()
     if number_of_parcels_OK != exported_parcel_number-1:
         self.show_and_log("E", "EXG-0108: "+_translate("export_gml", "Oh no! ")+str(number_of_parcels_OK)+_translate("export_gml", " parcels should have been exported, but actually ")+str(exported_parcel_number-1)+_translate("export_gml", " parcels have been exported. Please report this bug."), 0)
@@ -260,32 +267,32 @@ def run_script(self):
 def describe_multipolygon(feature_multipolygon, localId_1, nameSpace_1, crs_1, output_file):
     geometry_1=feature_multipolygon.geometry()
     for polygon_1 in range(len(geometry_1.asMultiPolygon())):
-        print >>output_file, '''                    <gml:surfaceMember>
+        print('''                    <gml:surfaceMember>
                         <gml:Surface gml:id="Surface_'''+nameSpace_1+'.'+localId_1+'.'+"Polygon_%04d"%(polygon_1+1, )+'" srsName="urn:ogc:def:crs:'+crs_1+'''">
                             <gml:patches>
-                                <gml:PolygonPatch>'''
+                                <gml:PolygonPatch>''', file=output_file)
         for ring_1 in range(len(geometry_1.asMultiPolygon()[polygon_1])):
                 if ring_1==0:
-                    print >>output_file, '''                                    <gml:exterior>'''
+                    print('''                                    <gml:exterior>''', file=output_file)
                 else:
-                    print >>output_file, '''                                    <gml:interior>'''
+                    print('''                                    <gml:interior>''', file=output_file)
                 points_number = len(geometry_1.asMultiPolygon()[polygon_1][ring_1])
-                print >>output_file, '''                                        <gml:LinearRing>
-                                            <gml:posList srsDimension="2" count="'''+str(points_number)+'''">''',
+                print('''                                        <gml:LinearRing>
+                                            <gml:posList srsDimension="2" count="'''+str(points_number)+'''">''', end=' ', file=output_file)
                 for point_1 in range(points_number):
-                    print >>output_file, "%f %f"%(geometry_1.asMultiPolygon()[polygon_1][ring_1][point_1].x(), geometry_1.asMultiPolygon()[polygon_1][ring_1][point_1].y()),
+                    print("%f %f"%(geometry_1.asMultiPolygon()[polygon_1][ring_1][point_1].x(), geometry_1.asMultiPolygon()[polygon_1][ring_1][point_1].y()), end=' ', file=output_file)
                     if point_1 != points_number-1:
-                        print >>output_file, ("   "),
-                print >>output_file, '''</gml:posList>
-                                        </gml:LinearRing>'''
+                        print(("   "), end=' ', file=output_file)
+                print('''</gml:posList>
+                                        </gml:LinearRing>''', file=output_file)
                 if ring_1==0:
-                    print >>output_file, '''                                    </gml:exterior>'''
+                    print('''                                    </gml:exterior>''', file=output_file)
                 else:
-                    print >>output_file, '''                                    </gml:interior>'''
-        print >>output_file, '''                                </gml:PolygonPatch>
+                    print('''                                    </gml:interior>''', file=output_file)
+        print('''                                </gml:PolygonPatch>
                             </gml:patches>
                         </gml:Surface>
-                    </gml:surfaceMember>'''
+                    </gml:surfaceMember>''', file=output_file)
 ###########################################################################################################################
 ###########################################################################################################################
 def describe_polygon(feature_polygon, localId_1, nameSpace_1, crs_1, output_file):

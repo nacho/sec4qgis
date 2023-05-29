@@ -22,26 +22,33 @@
  *                                                                         *
  ***************************************************************************/
 """
+from __future__ import absolute_import
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QAction, QMessageBox
 from qgis.core import *
 from qgis.gui import *
-import resources
+from . import resources
 import os.path
 import codecs
 import re
 import subprocess
-import ConfigParser
+import configparser
 import shutil
-import import_cartography
-import export_gml
-import options
-class Sec4Qgis:
+from . import import_cartography
+from . import export_gml
+from . import options
+
+
+class Sec4Qgis(object):
     """QGIS Plugin Implementation."""
-###########################################################################################################################
-###########################################################################################################################
+
+
     def __init__(self, iface):
         """Constructor.
         :param iface: An interface instance that will be passed to this class
@@ -49,6 +56,7 @@ class Sec4Qgis:
             application at run time.
         :type iface: QgsInterface
         """
+        super(Sec4Qgis, self).__init__()
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
         locale = QSettings().value('locale/userLocale')[0:2]
@@ -59,8 +67,7 @@ class Sec4Qgis:
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
-            if qVersion() > '4.3.3':
-                QCoreApplication.installTranslator(self.translator)
+            QCoreApplication.installTranslator(self.translator)
         self.valid_sec_crs_list = dict([ 
                 ('EPSG:25829', self.tr('Western Spanish peninsula')), 
                 ('EPSG:25830', self.tr('Central Spanish peninsula, Ceuta, and Melilla')), 
@@ -80,12 +87,12 @@ class Sec4Qgis:
         self.set_global_options()
         unzip_directory = os.path.dirname(os.path.abspath(__file__))+"/tmp/"
         shutil.rmtree(unzip_directory, ignore_errors=True)
-###########################################################################################################################
-###########################################################################################################################
+
+
     def tr(self, text, disambiguate=None):
         return QCoreApplication.translate("Sec4Qgis", text, disambiguate)
-###########################################################################################################################
-###########################################################################################################################
+
+
     def add_action(
         self,
         icon_path,
@@ -141,8 +148,8 @@ class Sec4Qgis:
                 action)
         self.actions.append(action)
         return action
-###########################################################################################################################
-###########################################################################################################################
+
+
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         self.add_action(
@@ -165,8 +172,8 @@ class Sec4Qgis:
             text=self.tr('SEC4QGIS user guide'),
             callback=self.help_main,
             parent=self.iface.mainWindow())
-###########################################################################################################################
-###########################################################################################################################
+
+
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -175,36 +182,36 @@ class Sec4Qgis:
                 action)
             self.iface.removeToolBarIcon(action)
         del self.toolbar
-###########################################################################################################################
-###########################################################################################################################
+
+
     def import_cartography_main (self):
         if self.import_cartography_dialog is None:
             self.import_cartography_dialog = import_cartography.run_script(self)
         else:
             self.import_cartography_dialog.activateWindow()
-###########################################################################################################################
-###########################################################################################################################
+
+
     def export_gml_main(self):
         if self.export_gml_dialog is None:
             self.export_gml_dialog = export_gml.run_script(self)
         else:
             self.export_gml_dialog.activateWindow()
-###########################################################################################################################
-###########################################################################################################################
+
+
     def options_main(self):
         if self.options_dialog is None:
             self.options_dialog = options.run_script(self)
         else:
             self.options_dialog.activateWindow()
-###########################################################################################################################
-###########################################################################################################################
+
+
     def help_main(self):
         if QSettings().value('locale/userLocale')[0:2].upper() != "ES":
             QMessageBox.warning(None, self.tr("WARNING"), self.tr("This plugin is designed to work with the Spanish Cadastral Electronic Site (SEC), so it's expected to be used almost exclusively by Spanish citizens. That's why, by the moment, the user guide is written in Spanish only.<br/><br/>Sorry for any inconvenience this may cause you.")) 
         subprocess.Popen("xdg-open "+os.path.split(os.path.abspath(__file__))[0]+"/help/ayuda.pdf", shell=True)
         subprocess.Popen(os.path.split(os.path.abspath(__file__))[0]+"/help/ayuda.pdf", shell=True)
-###########################################################################################################################
-###########################################################################################################################
+
+
     def set_global_options(self):
         if QSettings().value('SEC/default_crs') is None:
             default_crs = 'EPSG:25830'
@@ -229,34 +236,34 @@ class Sec4Qgis:
                 pass
         if len(global_parameters_changed) > 0:
             pass
-###########################################################################################################################
-###########################################################################################################################
+
+
     def show_and_log(self, level_1, message_1, time_out=5):
         if level_1 == "E":
-            self.iface.messageBar().pushMessage(self.tr("ERROR"), message_1, level=QgsMessageBar.CRITICAL, duration=time_out)
-            QgsMessageLog.logMessage("["+self.tr("ERROR")+"] "+message_1, 'SEC', QgsMessageLog.CRITICAL)
+            self.iface.messageBar().pushMessage(self.tr("ERROR"), message_1, level=Qgis.Critical, duration=time_out)
+            QgsMessageLog.logMessage("["+self.tr("ERROR")+"] "+message_1, 'SEC', Qgis.Critical)
         elif level_1 == "EC":
             if time_out < 20:
                 time_out = 20
-            self.iface.messageBar().pushMessage(self.tr("CRITICAL-ERROR"), message_1, level=QgsMessageBar.CRITICAL, duration=time_out)
-            QgsMessageLog.logMessage("["+self.tr("CRITICAL-ERROR")+"] "+message_1, 'SEC', QgsMessageLog.CRITICAL)
+            self.iface.messageBar().pushMessage(self.tr("CRITICAL-ERROR"), message_1, level=Qgis.Critical, duration=time_out)
+            QgsMessageLog.logMessage("["+self.tr("CRITICAL-ERROR")+"] "+message_1, 'SEC', Qgis.Critical)
         elif (level_1 == "W") or (level_1 == "A"):
-            self.iface.messageBar().pushMessage(self.tr("WARNING"), message_1, level=QgsMessageBar.WARNING, duration=time_out)
-            QgsMessageLog.logMessage("["+self.tr("WARNING")+"] "+message_1, 'SEC', QgsMessageLog.WARNING)
+            self.iface.messageBar().pushMessage(self.tr("WARNING"), message_1, level=Qgis.Warning, duration=time_out)
+            QgsMessageLog.logMessage("["+self.tr("WARNING")+"] "+message_1, 'SEC', Qgis.Warning)
         elif level_1 == "I":
-            self.iface.messageBar().pushMessage(self.tr("INFO"), message_1, level=QgsMessageBar.INFO, duration=time_out)
-            QgsMessageLog.logMessage("["+self.tr("INFO")+"] "+message_1, 'SEC', QgsMessageLog.INFO)
+            self.iface.messageBar().pushMessage(self.tr("INFO"), message_1, level=Qgis.Info, duration=time_out)
+            QgsMessageLog.logMessage("["+self.tr("INFO")+"] "+message_1, 'SEC', Qgis.Info)
         else:
-            QgsMessageLog.logMessage("["+self.tr("DEBUG")+"] "+message_1, 'SEC', QgsMessageLog.INFO)
-###########################################################################################################################
-###########################################################################################################################
+            QgsMessageLog.logMessage("["+self.tr("DEBUG")+"] "+message_1, 'SEC', Qgis.Info)
+
+
     def fix_characters(self, string_1):
         return re.sub(r'[\ \!\"\#\%\\\'\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}\~]+', r'_', string_1)
-###########################################################################################################################
-###########################################################################################################################
+
+
     def plugin_name_and_version(self):
         self.plugin_path = os.path.dirname(os.path.abspath(__file__))
-        self.plugin_metadata = ConfigParser.ConfigParser()
+        self.plugin_metadata = configparser.ConfigParser()
         self.plugin_metadata.readfp(open(os.path.join(self.plugin_path, 'metadata.txt')))
         plugin_name = self.plugin_metadata.get('general', 'name')
         plugin_version = self.plugin_metadata.get('general', 'version')

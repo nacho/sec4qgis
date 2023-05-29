@@ -23,13 +23,13 @@
  ***************************************************************************/
 """
 
-from PyQt4 import QtGui, uic
-from PyQt4.QtGui import QFileDialog
-from PyQt4.QtCore import QSettings
+from PyQt5 import QtGui, uic
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog
+from PyQt5.QtCore import QSettings
 import os
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'export_gml_dialog.ui'))
-class ExportGmlDialog(QtGui.QDialog, FORM_CLASS):
+class ExportGmlDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(ExportGmlDialog, self).__init__(parent)
@@ -46,7 +46,7 @@ class ExportGmlDialog(QtGui.QDialog, FORM_CLASS):
             last_folder_export = ""
         else:
             last_folder_export = QSettings().value('SEC4QGIS/last_folder_export')
-        file_name = QFileDialog.getSaveFileName(self, _translate("export_gml", "Ouput GML file:"), last_folder_export, "*.gml")
+        file_name, __ = QFileDialog.getSaveFileName(self, _translate("export_gml", "Ouput GML file:"), last_folder_export, "*.gml")
         if len(file_name)>0:
             if file_name[-4:].upper() != ".GML":
                 file_name = file_name+".gml"

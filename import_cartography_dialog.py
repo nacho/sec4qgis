@@ -23,15 +23,15 @@
  ***************************************************************************/
 """
 
-from PyQt4 import QtGui, uic
-from PyQt4.QtGui import QFileDialog
-from PyQt4.QtCore import QSettings
+from PyQt5 import QtGui, uic
+from qgis.PyQt.QtWidgets import QApplication, QDialog, QFileDialog
+from PyQt5.QtCore import QSettings
 import datetime
 import sys
 import os
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'import_cartography_dialog.ui'))
-class ImportCartographyDialog(QtGui.QDialog, FORM_CLASS):
+class ImportCartographyDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(ImportCartographyDialog, self).__init__(parent)
@@ -50,7 +50,7 @@ class ImportCartographyDialog(QtGui.QDialog, FORM_CLASS):
             last_folder_import = ""
         else:
             last_folder_import = QSettings().value('SEC4QGIS/last_folder_import')
-        file_names = QFileDialog.getOpenFileNames(self, _translate("import_cartography", "File to import:"), last_folder_import, "*.dxf *.gml *.shp *.zip")
+        file_names, __ = QFileDialog.getOpenFileNames(self, _translate("import_cartography", "File to import:"), last_folder_import, "*.dxf *.gml *.shp *.zip")
         if len(file_names)>0:
             last_folder_import = os.path.split(file_names[0])[0]
             QSettings().setValue('SEC4QGIS/last_folder_import', last_folder_import)
@@ -69,4 +69,4 @@ class ImportCartographyDialog(QtGui.QDialog, FORM_CLASS):
 ###########################################################################################################################
 ###########################################################################################################################
 def _translate(context, text, disambig=None):
-        return QtGui.QApplication.translate(context, text, disambig)
+        return QApplication.translate(context, text, disambig)

@@ -45,7 +45,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox_layers">
+      <widget class="QgsMapLayerComboBox" name="comboBox_layers">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -142,7 +142,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox_GMLversion"/>
+      <widget class="QgsMapLayerComboBox" name="comboBox_GMLversion"/>
      </item>
     </layout>
    </item>

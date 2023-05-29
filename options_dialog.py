@@ -23,15 +23,15 @@
  ***************************************************************************/
 """
 
-from PyQt4 import QtGui, uic
-from PyQt4.QtGui import QFileDialog
-from PyQt4.QtCore import QSettings
+from qgis.PyQt import QtGui, uic
+from qgis.PyQt.QtWidgets import QDialog, QFileDialog
+from qgis.PyQt.QtCore import QSettings
 import datetime
 import sys
 import os
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'options_dialog.ui'))
-class OptionsDialog(QtGui.QDialog, FORM_CLASS):
+class OptionsDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(OptionsDialog, self).__init__(parent)

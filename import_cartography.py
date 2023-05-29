@@ -22,10 +22,14 @@
  *                                                                         *
  ***************************************************************************/
 """
+from __future__ import absolute_import
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from builtins import str
+from builtins import range
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QApplication, QMessageBox, QFileDialog
 from qgis.core import *
 from qgis.gui import *
 import datetime
@@ -37,7 +41,7 @@ import zipfile
 import shutil
 import time
 from random import randint
-from import_cartography_dialog import ImportCartographyDialog
+from .import_cartography_dialog import ImportCartographyDialog
 ###########################################################################################################################
 ###########################################################################################################################
 def run_script(self):
@@ -50,7 +54,7 @@ def run_script(self):
         else:
             last_folder_project = QSettings().value('SEC4QGIS/last_folder_project')
         QMessageBox.warning(None, _translate("import_cartography", "WARNING"), _translate("import_cartography", "<b>You have to save your project before importing any cartography.</b><br/><br/>Please, select the name and path for your project on the next window.")) 
-        project_file_name = QFileDialog.getSaveFileName(None, _translate("import_cartography", "Save project as"), last_folder_project, "*.qgs")
+        project_file_name, __ = QFileDialog.getSaveFileName(None, _translate("import_cartography", "Save project as"), last_folder_project, "*.qgs")
         if len(project_file_name)>0:
             if project_file_name[-4:].upper() != ".QGS":
                 project_file_name = project_file_name+".qgs"
@@ -72,7 +76,8 @@ def run_script(self):
     project_file_info = QFileInfo(QgsProject.instance().fileName())
     project_file_name_without_extension = os.path.splitext(project_file_info.fileName())[0]
     directory_1 = project_file_info.absolutePath()+"/"+project_file_name_without_extension+"_CAPAS/"
-    if (os.path.exists(directory_1)) and (len(self.iface.legendInterface().layers()) == 0):
+    layers_list = [tree_layer.layer() for tree_layer in QgsProject.instance().layerTreeRoot().findLayers()]
+    if (os.path.exists(directory_1)) and (len(layers_list) == 0):
         shutil.rmtree(directory_1, ignore_errors=True)
         time.sleep(0.1)
     if not os.path.exists(directory_1):
@@ -91,7 +96,6 @@ def run_script(self):
         return
     output_file.close()
     os.remove(directory_1+"test_rw.txt")
-    layers_list = self.iface.legendInterface().layers()
     layers_names_list = []
     polygon_layers_list = []
     active_layer_index = -1
@@ -204,7 +208,7 @@ def import_files(self, files_names_string, destination_layer, selected_crs, curr
         self.show_and_log("EC", "SIC-0207: "+_translate("import_cartography", "The cartography has NOT been imported to layer '")+destination_layer.name()+_translate("import_cartography","'. Unknown number of cadastral parcels."), 10)
         return
     if self.import_cartography_dialog.radioButton_new_layer.isChecked():
-        QgsMapLayerRegistry.instance().addMapLayer(destination_layer, 0)
+        QgsProject.instance().addMapLayer(destination_layer, 0)
         layers_root_node = QgsProject.instance().layerTreeRoot()
         destination_layer_node = QgsLayerTreeLayer(destination_layer)
         layers_root_node.insertChildNode(0, destination_layer_node)
@@ -246,10 +250,11 @@ def import_gml_and_shp(self, file_name, selected_crs, destination_layer):
     if file_extension == "GML":
         localId_file_field = ['inspireId_localId', 'localId']
         nameSpace_file_field = ['inspireId_namespace', 'namespace']
-        for line_1 in open(file_name):
-            if "EPSG:" in line_1:
-                file_crs = "EPSG:"+re.findall(r'EPSG:+(\d+)', line_1)[0]
-                break
+        with open(file_name) as gml_file:
+            for line_1 in gml_file.readlines():
+                if "EPSG" in line_1:
+                    file_crs = "EPSG:"+re.findall(r'EPSG/[0-9]/+(\d+)', line_1)[0]
+                    break
     elif file_extension == "SHP":
         localId_file_field = 'localId'
         nameSpace_file_field = 'namespace'
@@ -540,7 +545,7 @@ def trash_wrong_lines(self, lines_list):
 ###########################################################################################################################
 def get_map_layer_by_name(layer_name):
     layer_map = QgsMapLayerRegistry.instance().mapLayers()
-    for name_1, layer_1 in layer_map.iteritems():
+    for name_1, layer_1 in layer_map.items():
         if layer_1.name().upper() == layer_name.upper():
             if layer_1.isValid():
                 return layer_1
@@ -570,10 +575,10 @@ def set_layer_options(self, layer_1):
             ('tolerance', 10.0), 
             ('avoid_intersections', False)
         ])
-    layer_options_new_list=(layer_options_new['active'], layer_options_new['mode'], layer_options_new['units'], layer_options_new['tolerance'], layer_options_new['avoid_intersections'])
-    layer_options_current_list=current_project.snapSettingsForLayer(layer_1.id())[1:]
-    if layer_options_current_list != layer_options_new_list:
-        current_project.setSnapSettingsForLayer(layer_1.id(), layer_options_new['active'], layer_options_new['mode'], layer_options_new['units'], layer_options_new['tolerance'], layer_options_new['avoid_intersections'])
+    #layer_options_new_list=(layer_options_new['active'], layer_options_new['mode'], layer_options_new['units'], layer_options_new['tolerance'], layer_options_new['avoid_intersections'])
+    #layer_options_current_list=current_project.snapSettingsForLayer(layer_1.id())[1:]
+    #if layer_options_current_list != layer_options_new_list:
+    #    current_project.setSnapSettingsForLayer(layer_1.id(), layer_options_new['active'], layer_options_new['mode'], layer_options_new['units'], layer_options_new['tolerance'], layer_options_new['avoid_intersections'])
 ###########################################################################################################################
 ###########################################################################################################################
 def set_project_options(self):
@@ -661,12 +666,12 @@ def unzip_cartography (self, zip_file_name):
 ###########################################################################################################################
 ###########################################################################################################################
 def _translate(context_1, text_1, disambig_1=None):
-        return QtGui.QApplication.translate(context_1, text_1, disambig_1)
+        return QApplication.translate(context_1, text_1, disambig_1)
 ###########################################################################################################################
 ###########################################################################################################################
 def layer_exists(layer_name_search):
     layermap_1 = QgsMapLayerRegistry.instance().mapLayers()
-    for name_1, layer_1 in layermap_1.iteritems():
+    for name_1, layer_1 in layermap_1.items():
         if layer.name_1() == layer_name_search:
             if layer.isValid():
                 return True

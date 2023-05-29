@@ -22,10 +22,11 @@
  *                                                                         *
  ***************************************************************************/
 """
+from __future__ import absolute_import
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt import QtCore, QtGui
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from qgis.core import *
 from qgis.gui import *
 import datetime
@@ -36,7 +37,7 @@ import re
 import zipfile
 import shutil
 from random import randint
-from options_dialog import OptionsDialog
+from .options_dialog import OptionsDialog
 ###########################################################################################################################
 ###########################################################################################################################
 def run_script(self):
